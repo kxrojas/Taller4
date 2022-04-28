@@ -34,12 +34,12 @@ public class UserService {
         return users;
     }
 
-    public User createUser(String username, String password, String role, String path) throws IOException {
-        String newLine = "\n" + username + "," + password + "," + role;
+    public User createUser(String username, String password, String role, String money, String path) throws IOException {
+        String newLine = "\n" + username + "," + password + "," + role + 0 + money;
         FileOutputStream os = new FileOutputStream(path + "WEB-INF/classes/" + "users.csv", true);
         os.write(newLine.getBytes());
         os.close();
 
-        return new User(username, password, role);
+        return new User(username, password, role, money);
     }
 }

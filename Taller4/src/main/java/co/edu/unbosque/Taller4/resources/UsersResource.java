@@ -1,6 +1,8 @@
 package co.edu.unbosque.Taller4.resources;
 import co.edu.unbosque.Taller4.dtos.ExceptionMessage;
+import co.edu.unbosque.Taller4.dtos.NFT;
 import co.edu.unbosque.Taller4.dtos.User;
+import co.edu.unbosque.Taller4.services.NFTService;
 import co.edu.unbosque.Taller4.services.UserService;
 
 import javax.ws.rs.*;
@@ -40,7 +42,7 @@ public class UsersResource {
         String contextPath =context.getRealPath("") + File.separator;
 
         try {
-            user = new UserService().createUser(user.getUsername(), user.getPassword(), user.getRole(), contextPath);
+            user = new UserService().createUser(user.getUsername(), user.getPassword(), user.getRole(), user.getMoney(), contextPath);
 
             return Response.created(UriBuilder.fromResource(UsersResource.class).path(user.getUsername()).build())
                     .entity(user)
@@ -83,12 +85,13 @@ public class UsersResource {
     public Response createForm(
             @FormParam("username") String username,
             @FormParam("password") String password,
-            @FormParam("role") String role
+            @FormParam("role") String role,
+            @FormParam("money") String money
     ) {
         String contextPath =context.getRealPath("") + File.separator;
 
         try {
-            User user = new UserService().createUser(username, password, role, contextPath);
+            User user = new UserService().createUser(username, password, role, money, contextPath);
 
             return Response.created(UriBuilder.fromResource(UsersResource.class).path(username).build())
                     .entity(user)
@@ -98,4 +101,63 @@ public class UsersResource {
         }
     }
 
+    @POST
+    @Path("/arts")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response createPiece(
+            @FormParam("username") String username,
+            @FormParam("role") String role,
+            @FormParam("titulo") String titulo,
+            @FormParam("money") String money
+
+    ){
+        String contextPath = context.getRealPath("") + File.separator;
+
+        try {
+            NFT nft = new NFTService().createNFT(username, role, titulo, money, contextPath);
+
+            return Response.created(UriBuilder.fromResource(UsersResource.class).path(username).build())
+                    .entity(nft)
+                    .build();
+        } catch (IOException e) {
+            return Response.serverError().build();
+        }
+    }
+
+    @POST
+    @Path("/recharge")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response rechargeFCoins(
+            @FormParam("username") String username,
+            @FormParam("money") String money
+    ){
+        String contextPath = context.getRealPath("") + File.separator;
+
+        try {
+            List<User> users = new UserService().getUsers();
+            User user = null;
+
+            for (User User : users){
+                if (User.getUsername().equalsIgnoreCase(username)){
+                    user = User;
+                    users.remove(user);
+                    break;
+                }
+            }
+
+            String currentMoney = user.getMoney();
+            String newMoney = String.valueOf(Integer.parseInt(currentMoney) + Integer.parseInt(money));
+            user.setMoney(newMoney);
+            new UserService().createUser(user.getUsername(), user.getPassword(), user.getRole(), user.getMoney(), contextPath);
+
+            return Response.created(UriBuilder.fromResource(UsersResource.class).path(username).build())
+                    .entity(user)
+                    .build();
+
+        } catch (IOException e) {
+            return Response.serverError().build();
+        }
+    }
 }
